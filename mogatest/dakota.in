@@ -1,0 +1,54 @@
+environment
+    tabular_graphics_data
+
+method
+moga
+    id_method = 'MOGA'
+    seed = 12345
+    initialization_type unique_random
+    population_size = 40 60 80
+    crossover_type shuffle_random
+        num_offspring = 30 45 60
+        num_parents = 40 60 80
+        crossover_rate = 0.75 0.5
+    mutation_type offset_normal
+        mutation_rate = 1 0.75
+        mutation_scale = 0.1
+    fitness_type domination_count
+    replacement_type below_limit = 1
+    shrinkage_percentage = 0.25
+    niching_type max_designs = 0 0
+        num_designs = 40 60 80
+    max_iterations = 1000
+    max_function_evaluations = 50000
+
+model
+single
+
+variables
+    continuous_design = 4
+    initial_point = 3   -3   1   5
+    lower_bounds  = -4   -5   -4   -4
+    upper_bounds  = 6   4   5   5
+    descriptors   ='x1' 'x2' 'x3' 'x4'
+
+interface
+    system 
+    asynchronous evaluation_concurrency = 8
+        analysis_drivers = 'driver.sh'
+    #work_directory
+    #    named 'case'
+        directory_tag
+        directory_save
+        #parameters_file = ’params.in’
+        #results_file = ’result.out’
+        #file_save
+        work_directory named = 'workdir'
+        link_files = 'input.template' 'function.py'
+
+responses
+    objective_functions = 2
+    descriptors = 'y' 'y_inv'
+    sense = "min" "min"
+    no_gradients
+    no_hessian
