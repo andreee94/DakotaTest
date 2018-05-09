@@ -7,6 +7,25 @@ import math
 import argparse
 
 
+def pareto_frontier(Xs, Ys, maxX = True, maxY = True):
+    # Sort the list in either ascending or descending order of X
+    myList = sorted([[Xs[i], Ys[i]] for i in range(len(Xs))], reverse=maxX)
+    # Start the Pareto frontier with the first value in the sorted list
+    p_front = [myList[0]]    
+    # Loop through the sorted list
+    for pair in myList[1:]:
+        if maxY: 
+            if pair[1] >= p_front[-1][1]: # Look for higher values of Y
+                p_front.append(pair) # and add them to the Pareto frontier
+        else:
+            if pair[1] <= p_front[-1][1]: # Look for lower values of Y
+                p_front.append(pair) #  and add them to the Pareto frontier
+    # Turn resulting pairs back into a list of Xs and Ys
+    p_frontX = [pair[0] for pair in p_front]
+    p_frontY = [pair[1] for pair in p_front]
+    return p_frontX, p_frontY
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("filename", help="Filename")
 parser.add_argument('-x', type=int, action='store', dest='x_index', help='Column index of x starting from 1')
@@ -24,6 +43,9 @@ parser.add_argument("--point", action="store_true", help="Point instead of lines
 parser.add_argument("--hideC", action="store_true", help="Hide points that does not satisfy the constraint boundary instead of mark in red", default=False)
 parser.add_argument('--lowerC', type=float, action='store', dest='lowerConstraint', help='Lower constraint', default=float('-inf'))
 parser.add_argument('--upperC', type=float, action='store', dest='upperConstraint', help='Upper constraint', default=0)
+parser.add_argument("--pareto", action="store_true", help="Plot pareto frontier, default is maxX and maxY")
+parser.add_argument("--paretominX", action="store_true", help="Pareto rule for x", default=False)
+parser.add_argument("--paretominY", action="store_true", help="Pareto rule for y", default=False)
 params = parser.parse_args()
 print(params)
 
@@ -48,12 +70,12 @@ else:
             y = data[:, 1]
             x_fail, y_fail = [], []
             
+            ##################################################
             if params.c_index != None:
                 c = data[:, 2]
                 x_new, y_new = [], []
                 for i, cc in enumerate(c):
                     if cc >= params.lowerConstraint and cc <= params.upperConstraint:
-                        print(cc)
                         x_new.append(x[i])
                         y_new.append(y[i])
                     elif not params.hideC:
@@ -96,6 +118,10 @@ else:
                 plt.plot(x, y)
                 if params.c_index != None and not params.hideC:
                     plt.plot(x_fail, y_fail, 'r')
+            ##################################################
+            if params.pareto:
+                paretoX, paretoY = pareto_frontier(x, y, maxX=not params.paretominX, maxY=not params.paretominY)
+                plt.plot(paretoX, paretoY, 'k--', linewidth=2)
             plt.grid()
         except Exception as e:
             print('Error extracting columns')
