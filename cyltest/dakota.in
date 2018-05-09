@@ -4,7 +4,7 @@ environment
 method
 moga
     id_method = 'MOGA'
-    seed = 12345
+    seed = 456
     initialization_type unique_random
     population_size = 40 60 80
     crossover_type shuffle_random
@@ -19,7 +19,7 @@ moga
     shrinkage_percentage = 0.25
     niching_type max_designs = 0 0
         num_designs = 40 60 80
-    max_iterations = 1000
+    max_iterations = 2000
     max_function_evaluations = 50000
 
 model
@@ -52,6 +52,6 @@ responses
     sense = "min" "min"
     nonlinear_inequality_constraints = 1
         nonlinear_inequality_lower_bounds = 200
-        nonlinear_inequality_upper_bounds = 1000
+        nonlinear_inequality_upper_bounds = 100000
     no_gradients
     no_hessian
