@@ -3,13 +3,15 @@ import numpy
 import sys
 import os.path
 from pprint import pprint
+import math
 import argparse
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("filename", help="Filename")
-parser.add_argument('-x', type=int, action='store', dest='x_index', help='Comumn index of x starting from 1')
-parser.add_argument('-y', type=int, action='store', dest='y_index', help='Comumn index of y starting from 1')
+parser.add_argument('-x', type=int, action='store', dest='x_index', help='Column index of x starting from 1')
+parser.add_argument('-y', type=int, action='store', dest='y_index', help='Column index of y starting from 1')
+parser.add_argument('-c', type=int, action='store', dest='c_index', help='Column index of constraint starting from 1', default=None)
 parser.add_argument("-xs", "--xsort", action="store_true", help="Sort x vector")
 parser.add_argument("--max", action="store_true", help="Take max of y up to now")
 parser.add_argument("--min", action="store_true", help="Take min of y up to now")
@@ -19,6 +21,9 @@ parser.add_argument("--xlog", action="store_true", help="Axis x logarithmic")
 parser.add_argument("--ylog", action="store_true", help="Axis y logarithmic")
 parser.add_argument("--loglog", action="store_true", help="Axis x and y logarithmic")
 parser.add_argument("--point", action="store_true", help="Point instead of lines", default=False)
+parser.add_argument("--hideC", action="store_true", help="Hide points that does not satisfy the constraint boundary instead of mark in red", default=False)
+parser.add_argument('--lowerC', type=float, action='store', dest='lowerConstraint', help='Lower constraint', default=float('-inf'))
+parser.add_argument('--upperC', type=float, action='store', dest='upperConstraint', help='Upper constraint', default=0)
 params = parser.parse_args()
 print(params)
 
@@ -27,7 +32,6 @@ if params.x_index == None or params.y_index == None:
 else:
     x_index = params.x_index - 1
     y_index = params.y_index - 1
-
     
     plt.show()
     first = True
@@ -35,10 +39,32 @@ else:
     while first or params.update_time != None: # always true if update is set
         first = False
         try:
-            data = numpy.loadtxt(params.filename, skiprows=1, usecols=(x_index, y_index))
+            if params.c_index != None:
+                c_index = params.c_index - 1
+                data = numpy.loadtxt(params.filename, skiprows=1, usecols=(x_index, y_index, c_index))
+            else: data = numpy.loadtxt(params.filename, skiprows=1, usecols=(x_index, y_index))
             #print(data)
             x = data[:, 0]
             y = data[:, 1]
+            x_fail, y_fail = [], []
+            
+            if params.c_index != None:
+                c = data[:, 2]
+                x_new, y_new = [], []
+                for i, cc in enumerate(c):
+                    if cc >= params.lowerConstraint and cc <= params.upperConstraint:
+                        print(cc)
+                        x_new.append(x[i])
+                        y_new.append(y[i])
+                    elif not params.hideC:
+                        x_fail.append(x[i])
+                        y_fail.append(y[i])
+                x = x_new
+                y = y_new
+                
+                #x_new = [x[i] for cc, i in enumerate(params.c) if cc >= params.lowerConstraint and cc <= params.upperConstraint]
+                #y_new = [y[i] for cc, i in enumerate(params.c) if cc >= params.lowerConstraint and cc <= params.upperConstraint]
+            
             ##################################################
             if params.xsort:
                 x.sort()
@@ -63,8 +89,13 @@ else:
                 plt.yscale('log')
             ##################################################
             if params.point:
+                if params.c_index != None and not params.hideC:
+                    plt.plot(x_fail, y_fail, 'r*')
                 plt.plot(x, y, '*')
-            else: plt.plot(x, y)
+            else: 
+                plt.plot(x, y)
+                if params.c_index != None and not params.hideC:
+                    plt.plot(x_fail, y_fail, 'r')
             plt.grid()
         except Exception as e:
             print('Error extracting columns')
